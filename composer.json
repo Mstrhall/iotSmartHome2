@@ -1,0 +1,5 @@
+{
+    "require": {
+        "symfony/amqp-messenger": "^7.2"
+    }
+}

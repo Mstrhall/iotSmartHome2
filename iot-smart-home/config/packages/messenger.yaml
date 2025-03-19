@@ -1,0 +1,16 @@
+framework:
+    messenger:
+        buses:
+            messenger.bus.default:
+                middleware:
+                    - 'App\Middleware\ThrottlingMiddleware'
+        transports:
+            iot_events:
+                dsn: 'amqp://guest:guest@localhost:5672/%2f'
+                options:
+                    exchange:
+                        name: sensor_events
+                        type: fanout
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000

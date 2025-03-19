@@ -1,0 +1,48 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP (Messenger Symfony)
+      - "15672:15672" # Interface RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app_network
+
+  mercure:
+    image: dunglas/mercure
+    container_name: mercure
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_NAME: ':8081'  # 🔥 Désactive HTTPS
+      MERCURE_PUBLISHER_JWT_KEY: "/etc/mercure/publisher.key"
+      MERCURE_SUBSCRIBER_JWT_KEY: "/etc/mercure/subscriber.key"
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins *
+        anonymous
+        allow_anonymous
+        enable_unsecured_mode
+    command: /usr/bin/caddy run --config /etc/caddy/Caddyfile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/healthz"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./keys:/etc/mercure  # Monter le dossier des clés locales dans le conteneur Mercure
+      - mercure_data:/data
+      - mercure_config:/config
+    networks:
+      - app_network
+
+volumes:
+  mercure_data:
+  mercure_config:
+
+networks:
+  app_network:
